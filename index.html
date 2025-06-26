@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kinwise AI Readiness Pulse</title>
+    
+    <!-- Tailwind CSS for rapid UI development -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter for a clean, modern look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Custom styles to match the Kinwise brand identity with the new palette */
+        :root {
+            --kinwise-primary: #2E4A36; /* Forest Green */
+            --kinwise-secondary: #B4845C; /* Clay Ochre */
+            --kinwise-dark-text: #202A36;
+            --kinwise-background: #f4e8d0; /* Warm Beige Background */
+            --kinwise-panel-bg: #FFFDF9; /* Off-white panel */
+            --kinwise-text: #4b5563;
+            --kinwise-hover-bg: #F9F5EF;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--kinwise-background);
+            color: var(--kinwise-text);
+        }
+
+        /* Updated button styling for contrast and consistency */
+        .btn {
+            @apply inline-block px-6 py-3 text-base font-semibold rounded-lg shadow-md transition-all duration-200 transform hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-offset-2;
+            min-height: 44px;
+            color: var(--kinwise-panel-bg); /* High-contrast text color */
+        }
+        
+        .btn-primary {
+            background-color: var(--kinwise-primary);
+            border-color: var(--kinwise-primary);
+        }
+        
+        .btn-primary:hover {
+             background-color: #3A5A43; /* User-specified hover color */
+             box-shadow: 0 7px 15px -3px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-secondary {
+            background-color: #6b7280;
+            border-color: #6b7280;
+        }
+
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
+        
+        .btn:disabled {
+            background-color: #A3A3A3;
+            color: #dddddd; /* Lighter gray for disabled text */
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+
+        /* Input field styling */
+        .form-input, .form-textarea {
+             @apply w-full px-4 py-3 text-base border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-kinwise-primary focus:border-kinwise-primary outline-none;
+        }
+        
+        .form-input::placeholder {
+            color: #6b7280; /* Tailwind gray-500 */
+        }
+
+        .form-textarea {
+            min-height: 120px;
+        }
+
+        /* Progress bar styling */
+        .progress-bar-bg {
+            background-color: #e9e9e9;
+            @apply w-full h-2.5 rounded-full overflow-hidden;
+        }
+        .progress-bar-fg {
+            background-color: var(--kinwise-primary); 
+            @apply h-full rounded-full transition-all duration-500 ease-out;
+        }
+        
+        /* Card styling for the main quiz container */
+        .quiz-container-card {
+            @apply bg-white p-6 sm:p-8 rounded-2xl shadow-lg transition-all duration-300;
+        }
+        
+        /* Animation for screen transitions */
+        .screen {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Styling for the new response option cards */
+        .level-choice {
+            display: flex;
+            align-items: flex-start;
+            padding: 20px;
+            border: 2px solid #e5e7eb; /* default gray from tailwind */
+            border-radius: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+            background-color: white;
+        }
+
+        .level-choice:hover {
+            background-color: var(--kinwise-hover-bg);
+            border-color: #d1d5db;
+        }
+        
+        /* Modern :has() selector for styling the selected card based on the checked input inside it */
+        .level-choice:has(input:checked) {
+            background-color: var(--kinwise-hover-bg);
+            /* Dynamic border color is applied via JS */
+        }
+        
+        .level-choice input[type="radio"] {
+            margin-top: 5px; /* Fine-tune vertical alignment */
+            margin-right: 16px;
+            width: 1.3em;
+            height: 1.3em;
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+        
+        .level-content {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+        }
+        
+        .level-title {
+            font-weight: 600;
+            font-size: 1.1em;
+            margin-right: 8px;
+        }
+
+        .level-description {
+            color: #555e68;
+        }
+
+        .time-slot-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .time-slot-grid .header {
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .time-slot-grid .label {
+            font-weight: 500;
+            text-align: right;
+            padding-right: 1rem;
+        }
+
+        .time-slot-grid .checkbox-container {
+            display: flex;
+            justify-content: center;
+        }
+         .time-slot-grid input[type="checkbox"] {
+            width: 1.5em;
+            height: 1.5em;
+            border-radius: 0.25rem;
+            accent-color: var(--kinwise-primary);
+            cursor: pointer;
+         }
+         .time-slot-grid input[type="checkbox"]:hover {
+             box-shadow: 0 0 0 3px rgba(46, 74, 54, 0.2);
+         }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="w-full max-w-4xl mx-auto bg-[var(--kinwise-panel-bg)] rounded-2xl shadow-2xl overflow-hidden">
+        
+        <!-- Domain Color Bar -->
+        <div id="domain-bar" class="flex h-2"></div>
+        
+        <main id="app-container" class="p-6 sm:p-10">
+    
+            <!-- Screen 1: Welcome & Setup -->
+            <div id="screen-start" class="screen text-center">
+                <div class="flex justify-center items-center gap-3 mb-4">
+                    <!-- Kinwise "K" Logo -->
+                    <svg class="w-12 h-12" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M50 0 C25 25, 25 75, 50 100 C60 75, 60 25, 50 0 Z" fill="#B4845C" transform="translate(-15, 0)"/>
+                        <path d="M50 0 C75 25, 75 75, 50 100 C40 75, 40 25, 50 0 Z" fill="#2E4A36" transform="translate(15, 0)"/>
+                    </svg>
+                    <h1 class="text-4xl md:text-5xl font-extrabold text-kinwise-dark-text">Kinwise AI Readiness Pulse</h1>
+                </div>
+
+                <p class="text-sm text-gray-500 mb-8">Takes 3–5 minutes · No wrong answers</p>
+
+                <p class="text-lg mb-8 max-w-2xl mx-auto">Welcome! The AI Readiness Pulse is a chance to reflect on how your organization is preparing for new AI tools through a human-first lens.</p>
+                
+                <div class="text-left bg-white p-6 rounded-xl mb-10 border border-gray-200">
+                    <p class="font-semibold text-kinwise-dark-text mb-4">A human-first approach means ensuring any AI you use is:</p>
+                    <ul class="space-y-3">
+                        <li class="flex items-start gap-3"><svg class="w-6 h-6 text-green-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.052-.143z" clip-rule="evenodd" /></svg><span class="text-lg leading-relaxed"><span class="font-bold">Helpful:</span> Supports people and goals, not busywork.</span></li>
+                        <li class="flex items-start gap-3"><svg class="w-6 h-6 text-green-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.052-.143z" clip-rule="evenodd" /></svg><span class="text-lg leading-relaxed"><span class="font-bold">Fair:</span> Treats everyone equitably, reduces bias.</span></li>
+                        <li class="flex items-start gap-3"><svg class="w-6 h-6 text-green-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.052-.143z" clip-rule="evenodd" /></svg><span class="text-lg leading-relaxed"><span class="font-bold">Clear:</span> You can explain "why" in plain words.</span></li>
+                        <li class="flex items-start gap-3"><svg class="w-6 h-6 text-green-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.052-.143z" clip-rule="evenodd" /></svg><span class="text-lg leading-relaxed"><span class="font-bold">Accountable:</span> You set rules and own the outcomes.</span></li>
+                    </ul>
+                </div>
+                
+                <div class="space-y-8 text-left">
+                    <div>
+                        <h3 class="font-semibold mb-3 text-kinwise-dark-text">How would you describe your organization? *</h3>
+                        <div class="space-y-4">
+                            <label class="level-choice">
+                                <input type="radio" id="org-school" name="orgType" value="school" required>
+                                <div class="level-content">
+                                    <span class="level-title">I work in a district or school</span>
+                                </div>
+                            </label>
+                            <label class="level-choice">
+                                <input type="radio" id="org-business" name="orgType" value="business">
+                                 <div class="level-content">
+                                    <span class="level-title">I work in a business or non-profit</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                 <p id="start-error" class="text-red-500 mt-6 h-6"></p>
+                <button id="start-btn" class="btn btn-primary w-full mt-4">Start the Pulse</button>
+            </div>
+    
+            <!-- Screen 2: Quiz Questions -->
+            <div id="screen-quiz" class="screen">
+                <div id="progress-container" class="mb-8">
+                    <p id="progress-text" class="text-sm font-semibold text-kinwise-dark-text mb-2"></p>
+                    <div class="progress-bar-bg">
+                        <div id="progress-bar" class="progress-bar-fg"></div>
+                    </div>
+                </div>
+    
+                <div id="quiz-content" class="quiz-container-card">
+                    <!-- Questions will be injected here by JavaScript -->
+                </div>
+                
+                <div id="navigation-controls" class="flex justify-between items-center mt-8">
+                    <button id="back-btn" class="btn btn-secondary">◀ Back</button>
+                    <button id="next-btn" class="btn btn-primary"></button>
+                </div>
+            </div>
+    
+            <!-- Screen 3: Results -->
+            <div id="screen-results" class="screen quiz-container-card text-center">
+                <h2 class="text-2xl font-bold text-kinwise-dark-text mb-2">Your AI Readiness Score</h2>
+                <p id="score-value" class="text-8xl font-bold my-4" style="color: var(--kinwise-primary);">0</p>
+                <div id="score-feedback" class="mb-8">
+                    <h3 id="feedback-title" class="text-3xl font-bold text-kinwise-dark-text mb-2"></h3>
+                    <p id="feedback-text" class="text-lg"></p>
+                </div>
+                
+                 <div class="text-left bg-gray-50 p-6 rounded-lg mb-8 border border-gray-200">
+                    <h3 class="font-semibold mb-3 text-kinwise-dark-text">Would you like to discuss your score?</h3>
+                    <p class="mb-4">We can provide targeted strategies to boost your AI Readiness. We'll reach out once, and won't spam you.</p>
+                    <div class="space-y-3">
+                         <label class="level-choice">
+                             <input type="radio" id="contact-yes" name="contact-opt-in" value="yes">
+                             <div class="level-content">
+                                <span class="level-title">Yes, please contact me.</span>
+                             </div>
+                        </label>
+                         <label class="level-choice">
+                           <input type="radio" id="contact-no" name="contact-opt-in" value="no" checked>
+                             <div class="level-content">
+                                <span class="level-title">No, thank you.</span>
+                             </div>
+                        </label>
+                    </div>
+                    <div class="mt-4 text-center">
+                        <p id="results-helper-text" class="text-gray-600 mb-2 h-6"></p>
+                        <button id="results-action-btn" class="btn btn-primary" disabled>Select an option</button>
+                    </div>
+                 </div>
+                <button id="restart-btn" class="btn btn-secondary w-full sm:w-auto">Take the Pulse Again</button>
+            </div>
+    
+            <!-- Screen 4: Contact Form -->
+            <div id="screen-contact" class="screen quiz-container-card">
+                 <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-kinwise-dark-text">Let's Connect</h2>
+                    <p class="mt-2 max-w-lg mx-auto">Tell us how you'd like to follow up—we’ll reach out once to schedule a chat.</p>
+                 </div>
+
+                 <form id="contact-form" class="space-y-8">
+                    <!-- Contact Info Section -->
+                    <div class="space-y-6">
+                        <div>
+                            <label for="contact-name" class="font-semibold block mb-2 text-kinwise-dark-text">Name *</label>
+                            <input type="text" id="contact-name" name="contact-name" class="form-input" placeholder="Your Name" required>
+                        </div>
+                        
+                         <div>
+                            <label for="contact-email" class="font-semibold block mb-2 text-kinwise-dark-text">Your Email *</label>
+                            <input type="email" id="contact-email" name="contact-email" class="form-input" placeholder="you@yourorganization.com" required>
+                        </div>
+
+                        <fieldset>
+                            <legend class="font-semibold block mb-3 text-kinwise-dark-text">Preferred Contact Method</legend>
+                            <div class="space-y-3">
+                                <label class="level-choice"><input type="radio" name="contact-method" value="email" checked><div class="level-content"><span class="level-title">Email</span></div></label>
+                                <label class="level-choice"><input type="radio" name="contact-method" value="phone"><div class="level-content"><span class="level-title">Phone</span></div></label>
+                                <label class="level-choice"><input type="radio" name="contact-method" value="video"><div class="level-content"><span class="level-title">Video call (Zoom/Meet)</span></div></label>
+                            </div>
+                        </fieldset>
+                        
+                        <div>
+                            <label for="contact-phone" class="font-semibold block mb-2 text-kinwise-dark-text">Best Phone Number</label>
+                            <input type="tel" id="contact-phone" name="contact-phone" class="form-input" placeholder="(555) 123-4567">
+                        </div>
+
+                    </div>
+                    
+                    <!-- Meeting Preferences Section -->
+                    <fieldset>
+                         <legend class="font-semibold block mb-3 text-kinwise-dark-text">Ideal Meeting Times (Eastern Time)</legend>
+                         <div class="time-slot-grid border border-gray-200 rounded-lg p-4">
+                            <!-- Headers -->
+                            <div class="header"></div><div class="header font-bold">M</div><div class="header font-bold">T</div><div class="header font-bold">W</div><div class="header font-bold">Th</div><div class="header font-bold">F</div>
+                            
+                            <!-- Morning Row -->
+                            <div class="label">Morning<br><span class="text-xs text-gray-500 font-normal">(8–12)</span></div>
+                            <div class="checkbox-container"><input type="checkbox" name="time" value="m-am"></div>
+                            <div class="checkbox-container"><input type="checkbox" name="time" value="t-am"></div>
+                            <div class="checkbox-container"><input type="checkbox" name="time" value="w-am"></div>
+                            <div class="checkbox-container"><input type="checkbox" name="time" value="th-am"></div>
+                            <div class="checkbox-container"><input type="checkbox" name="time" value="f-am"></div>
+                            
+                            <!-- Afternoon Row -->
+                            <div class="label">Afternoon<br><span class="text-xs text-gray-500 font-normal">(12–4)</span></div>
+                             <div class="checkbox-container"><input type="checkbox" name="time" value="m-pm"></div>
+                            <div class="checkbox-container"><input type="checkbox" name="time" value="t-pm"></div>
+                            <div class="checkbox-container"><input type="checkbox" name="time" value="w-pm"></div>
+                            <div class="checkbox-container"><input type="checkbox" name="time" value="th-pm"></div>
+                            <div class="checkbox-container"><input type="checkbox" name="time" value="f-pm"></div>
+
+                            <!-- Evening Row -->
+                            <div class="label">Evening<br><span class="text-xs text-gray-500 font-normal">(4–7)</span></div>
+                            <div class="checkbox-container"><input type="checkbox" name="time" value="m-eve"></div>
+                            <div class="checkbox-container"><input type="checkbox" name="time" value="t-eve"></div>
+                            <div class="checkbox-container"><input type="checkbox" name="time" value="w-eve"></div>
+                            <div class="checkbox-container"><input type="checkbox" name="time" value="th-eve"></div>
+                            <div class="checkbox-container"><input type="checkbox" name="time" value="f-eve"></div>
+                         </div>
+                    </fieldset>
+
+                    <!-- Notes Section -->
+                    <div>
+                         <label for="contact-notes" class="font-semibold block mb-2 text-kinwise-dark-text">Anything else we should know?</label>
+                         <textarea id="contact-notes" name="contact-notes" class="form-textarea" placeholder="Optional notes, preferences, or context"></textarea>
+                    </div>
+
+                    <div class="flex justify-between items-center pt-4">
+                        <button type="button" id="contact-back-btn" class="btn btn-secondary">◀ Back</button>
+                        <button type="submit" class="btn btn-primary">Submit Request</button>
+                    </div>
+                     <p id="contact-error" class="text-red-500 mt-4 h-6 text-center"></p>
+                 </form>
+            </div>
+            
+            <!-- Screen 5: Thank You -->
+            <div id="screen-final" class="screen quiz-container-card text-center">
+                <h2 class="text-4xl font-bold" style="color: var(--kinwise-primary);">Thank You!</h2>
+                <p class="text-lg mb-8">Your responses have been recorded. If you requested a follow-up, we'll be in touch soon.</p>
+                <button id="final-restart-btn" class="btn btn-primary">Start Over</button>
+            </div>
+    
+        </main>
+    </div>
+
+    <script>
+        // --- DATA: Questions, Scoring, and Colors ---
+        const domainData = {
+            vision: { name: "Vision", color: "#2E4A36", icon: `<g stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3.25"></circle><circle cx="12" cy="12" r="7.5"></circle><path d="M12 2v2m0 16v2m8-10h2M2 12h2" stroke-linecap="round"></path></g>` },
+            policy: { name: "Policy & Governance", color: "#B4845C", icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v16.5h16.5" /><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 12.75L15 9l3.75 3.75" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 9V20.25" />` },
+            data: { name: "Data, Privacy, Security", color: "#8d99ae", icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.751A11.959 11.959 0 0115 2.714v.001z" />` },
+            tools: { name: "Technology & Tools", color: "#A3B5A4", icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />` },
+            people: { name: "People, Skills, & Culture", color: "#C16D5C", icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />` },
+            impact: { name: "Human-Centered Impact", color: "#D9B8A6", icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />` },
+        };
+        
+        const quizData = {
+            school: [
+                {
+                    domainKey: "vision",
+                    examples: ["Board-approved AI vision ties to Strategic Plan & Portrait of a Graduate", "Public dashboard shows hours of teacher time freed + reading-score gains"],
+                    options: [
+                        { level: "Nascent", text: "No AI vision. Teachers hear mixed messages. AI seen as fad or threat.", points: 1 },
+                        { level: "Emerging", text: "Draft vision paragraph shown only to cabinet. Supt.+1 leader took an AI webinar. No goals or owner yet.", points: 2 },
+                        { level: "Practicing", text: "Board-reviewed vision shared at principals’ meeting. Entire cabinet finished ½-day AI workshop & demoed one use. 2–3 KPIs selected.", points: 3 },
+                        { level: "Flourishing", text: "Vision co-crafted with teachers, students, parents. Built into budgets & SIPs. Cabinet logs annual AI learning. Public dashboard tracks outcomes & equity.", points: 4 }
+                    ]
+                },
+                {
+                    domainKey: "policy",
+                    examples: ["District AI playbook filed with other board-approved policies", "Cross-functional 'AI Ethics Team' signs off on high-impact uses (e.g., grading algorithm)"],
+                    options: [
+                        { level: "Nascent", text: "No AI guidelines. Reactive decisions. Bias/fairness not discussed.", points: 1 },
+                        { level: "Emerging", text: "Draft principles exist. One person 'figuring out AI'. First ethics chat underway.", points: 2 },
+                        { level: "Practicing", text: "Approved policy shared. Review circle meets monthly. High-impact AI needs sign-off.", points: 3 },
+                        { level: "Flourishing", text: "Policy reviewed quarterly. Bias & explainability checks baked in. Annual transparency note posted.", points: 4 }
+                    ]
+                },
+                {
+                    domainKey: "data",
+                    examples: ["One-page cheat-sheet: FERPA, COPPA, state student-data laws", "Color-coded drive folders: Red = High (never upload), Yellow = Internal, Green = Public"],
+                    options: [
+                        { level: "Nascent", text: "Unsure which laws apply. No data labels. Staff sometimes paste names, IDs, or IP into AI tools.", points: 1 },
+                        { level: "Emerging", text: "Basic rule list shared. Two buckets: Sensitive / OK-to-share. Verbal reminder to keep Sensitive data out of AI.", points: 2 },
+                        { level: "Practicing", text: "One-page cheat-sheet for all staff. Three tiers: High / Internal / Public. Consent + opt-out flow. Quarterly leak checks.", points: 3 },
+                        { level: "Flourishing", text: "Each new AI tool runs through a data-risk checklist (laws, sensitivity tiers, breach impact). Red-flag list of 'never-share' items posted at every data entry point.", points: 4 }
+                    ]
+                },
+                 {
+                    domainKey: "tools",
+                    examples: ["'4-Q' test for every edtech AI tool: boosts learning? aligns with policy? protects data? delivers ROI?", "Live sheet tracks cost, usage, and any ethics flags for AI tools"],
+                    options: [
+                        { level: "Nascent", text: "Shared free logins. No mission/policy check. No usage or ROI tracking.", points: 1 },
+                        { level: "Emerging", text: "Simple pre-adoption checklist. Sheet lists tools + data they ingest. ROI guessed after pilot.", points: 2 },
+                        { level: "Practicing", text: "Formal template (mission, policy, data risk, ROI). Approved list reviewed quarterly. Usage & cost log flags tools.", points: 3 },
+                        { level: "Flourishing", text: "Every tool passes quick '4-Q' test (mission, rules, data, ROI). Live sheet flags cost/ethics slips. Yearly review: boost, fix, or drop.", points: 4 }
+                    ]
+                },
+                {
+                    domainKey: "people",
+                    examples: ["90-min AI 101 for all staff; 'AI Teacher Leaders' coach peers", "#ai-ideas channel shares lesson prompts and classroom wins"],
+                    options: [
+                        { level: "Nascent", text: "Few have tried AI. Job-loss anxiety. No training plan.", points: 1 },
+                        { level: "Emerging", text: "First lunch-and-learn held. #ai-ideas channel open. Leadership allows cautious tests. One-off poll asks teachers/students how they already use AI.", points: 2 },
+                        { level: "Practicing", text: "90-min AI 101 required. AI Teacher Leaders in each school. Time set aside to practice. Semester pulse survey guides PD topics & pilot selection.", points: 3 },
+                        { level: "Flourishing", text: "80%+ staff hold AI skill certificates. Annual upskilling budget. Innovation goals tied to centered AI impact. Survey insights dashboard shared.", points: 4 }
+                    ]
+                },
+                {
+                    domainKey: "impact",
+                    examples: ["Students, teachers, and families co-design AI pilots", "Equity check each semester: which student groups benefit most? Who's left out?"],
+                    options: [
+                        { level: "Nascent", text: "AI used mainly to go faster. No check on who benefits. Risk of 'robotic' interactions. Humans still buried in rote tasks.", points: 1 },
+                        { level: "Emerging", text: "Mission fit discussed. Small pilots (learning, workflow) ask: 'Tech do tech, humans do human'. Bias concerns noted.", points: 2 },
+                        { level: "Practicing", text: "Stakeholders co-design pilots. Human review on high-stakes AI decisions. Equity reviews each term. Data shows AI handled admin while teachers increased face-to-face time.", points: 3 },
+                        { level: "Flourishing", text: "Stakeholders co-own design & tuning. Dashboard tracks 'hours AI saves' vs 'hours humans spend on high-value work'. Fairness and impact metrics shared publicly.", points: 4 }
+                    ]
+                }
+            ],
+            business: [
+                {
+                    domainKey: "vision",
+                    examples: ["CEO-signed AI vision memo linked to annual OKRs", "All-hands slide tracks hours saved + new-revenue percentage from AI projects"],
+                    options: [
+                        { level: "Nascent", text: "No AI vision. Staff unsure if AI is threat or fad. Discussion stays at 'shiny object'.", points: 1 },
+                        { level: "Emerging", text: "Draft paragraph in strategy deck; execs only. CEO + 1 VP attended AI 101. No metrics yet.", points: 2 },
+                        { level: "Practicing", text: "Published AI vision ties to OKRs (e.g., cut support costs 25%). Shared at all-hands. Metrics tracked monthly.", points: 3 },
+                        { level: "Flourishing", text: "Vision co-crafted with frontline staff & customers. Budget, policy, KPIs align. Execs refresh AI learning yearly. Public dashboard shows ROI & equity outcomes.", points: 4 }
+                    ]
+                },
+                 {
+                    domainKey: "policy",
+                    examples: ["Written AI playbook with other policies", "Small 'Ethics Circle' signs off on high-impact uses"],
+                     options: [
+                        { level: "Nascent", text: "No AI guidelines. Reactive decisions. Bias/fairness not discussed.", points: 1 },
+                        { level: "Emerging", text: "Draft principles exist. One person 'figuring out AI'. First ethics chat underway.", points: 2 },
+                        { level: "Practicing", text: "Approved policy shared. Review circle meets monthly. High-impact AI needs sign-off.", points: 3 },
+                        { level: "Flourishing", text: "Policy reviewed quarterly. Bias & explainability checks baked in. Annual transparency note posted.", points: 4 }
+                    ]
+                },
+                {
+                    domainKey: "data",
+                    examples: ["One-page cheat-sheet: laws, fines, red-flag data (names, IDs, IP)", "Color-coded folders: High/Internal/Public"],
+                    options: [
+                        { level: "Nascent", text: "Unsure which laws apply. No data labels. Staff sometimes paste names, IDs, or IP into AI tools.", points: 1 },
+                        { level: "Emerging", text: "Basic rule list shared. Two buckets: Sensitive / OK-to-share. Verbal reminder to keep Sensitive data out of AI.", points: 2 },
+                        { level: "Practicing", text: "One-page cheat-sheet for all staff. Three tiers: High / Internal / Public. Consent + opt-out flow. Quarterly leak checks.", points: 3 },
+                        { level: "Flourishing", text: "Each new AI tool runs through a data-risk checklist. Red-flag list of 'never-share' items posted at every data entry point. Incident log tracks any slip and a fix within 24h.", points: 4 }
+                    ]
+                },
+                {
+                    domainKey: "tools",
+                    examples: ["Quick '4-Q' test: mission fit, rules, data risk, ROI", "Live sheet shows cost, usage, and any ethics flags"],
+                    options: [
+                        { level: "Nascent", text: "Shared free logins. No mission/policy check. No usage or ROI tracking.", points: 1 },
+                        { level: "Emerging", text: "Simple pre-adoption checklist. Sheet lists tools + data they ingest. ROI guessed after pilot.", points: 2 },
+                        { level: "Practicing", text: "Formal template (mission, policy, data risk, ROI). Approved list reviewed quarterly. Usage & cost log flags tools.", points: 3 },
+                        { level: "Flourishing", text: "Every tool passes quick '4-Q' test (mission, rules, data, ROI). Live sheet flags cost/ethics slips. Yearly review: boost, fix, or drop.", points: 4 }
+                    ]
+                },
+                 {
+                    domainKey: "people",
+                    examples: ["90-min AI 101 for staff; AI Champions coach peers", "#ai-ideas chat shares prompts and lessons learned"],
+                    options: [
+                        { level: "Nascent", text: "Few have tried AI. Job-loss anxiety. No training plan.", points: 1 },
+                        { level: "Emerging", text: "First lunch-and-learn held. #ai-ideas channel open. Leadership allows cautious tests. Quick staff poll captures current AI hacks & pain-points.", points: 2 },
+                        { level: "Practicing", text: "90-min AI 101 required. AI Champions in each team. Time to experiment. Quarterly survey maps staff & client ideas to new pilots.", points: 3 },
+                        { level: "Flourishing", text: "80%+ staff hold AI skill certs. Annual upskilling budget. Innovation KPIs link to AI wins. Live dashboard surfaces survey results.", points: 4 }
+                    ]
+                },
+                {
+                    domainKey: "impact",
+                    examples: ["Stakeholders help design and review AI tools", "Equity checks each term: who benefits? who's left out?"],
+                    options: [
+                        { level: "Nascent", text: "AI used mainly to go faster. No check on who benefits. Risk of robotic emails or chatbot tone.", points: 1 },
+                        { level: "Emerging", text: "Mission fit discussed. Small pilots (marketing copy, data clean-up). First talk of 'tech does data, people build relationships'.", points: 2 },
+                        { level: "Practicing", text: "Customers/beneficiaries co-design or give feedback. Human review on AI decisions that affect funding, hiring, etc. Quarterly impact review tracks hours AI saves.", points: 3 },
+                        { level: "Flourishing", text: "Stakeholders co-own design & tuning. Live dashboard shows hours saved → human work reclaimed, revenue/mission KPIs, fairness metrics. Success stories shared publicly.", points: 4 }
+                    ]
+                }
+            ]
+        };
+
+        const scoreTiers = [
+            { limit: 25, title: "Early Roots", text: "Your organization is just beginning its AI journey. This is a crucial time for building awareness and setting a foundational vision." },
+            { limit: 60, title: "Growing Canopy", text: "You're making good progress, with initial policies and experiments taking shape. The key now is to formalize processes and broaden engagement." },
+            { limit: 80, title: "Bearing Fruit", text: "Your AI initiatives are becoming more systematic and are starting to show tangible results. Focus on scaling successes and refining your governance." },
+            { limit: 100, title: "Thriving Ecosystem", text: "AI is deeply and responsibly integrated into your organization's strategy and culture. You're a model for human-centered AI." }
+        ];
+
+        // --- APPLICATION STATE ---
+        let currentState = {
+            currentQuestionIndex: 0,
+            orgType: null,
+            answers: {},
+        };
+
+        // --- DOM ELEMENTS ---
+        const screens = {
+            start: document.getElementById('screen-start'),
+            quiz: document.getElementById('screen-quiz'),
+            results: document.getElementById('screen-results'),
+            contact: document.getElementById('screen-contact'),
+            final: document.getElementById('screen-final'),
+        };
+        const domainBar = document.getElementById('domain-bar');
+        const startBtn = document.getElementById('start-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const backBtn = document.getElementById('back-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const finalRestartBtn = document.getElementById('final-restart-btn');
+        const quizContent = document.getElementById('quiz-content');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const contactForm = document.getElementById('contact-form');
+        const contactBackBtn = document.getElementById('contact-back-btn');
+        const resultsActionBtn = document.getElementById('results-action-btn');
+        const resultsHelperText = document.getElementById('results-helper-text');
+
+
+        // --- FUNCTIONS ---
+
+        function showScreen(screenId) {
+            Object.values(screens).forEach(screen => screen.style.display = 'none');
+            const targetScreen = document.getElementById(`screen-${screenId}`);
+            if(targetScreen) {
+               targetScreen.style.display = 'block';
+            }
+        }
+        
+        function applyDynamicStyling(inputId) {
+            const currentQuestionData = quizData[currentState.orgType][currentState.currentQuestionIndex];
+            const color = domainData[currentQuestionData.domainKey].color;
+            
+             // Reset all cards first
+            quizContent.querySelectorAll('.level-choice').forEach(label => {
+                label.style.borderColor = '#e5e7eb';
+                label.style.boxShadow = '';
+                const radio = label.querySelector('input[type="radio"]');
+                radio.style.accentColor = '#a0aec0'; // a neutral gray
+            });
+
+            // Style the selected card
+            const selectedLabel = document.querySelector(`label[for="${inputId}"]`);
+            if (selectedLabel) {
+                selectedLabel.style.borderColor = color;
+                selectedLabel.style.boxShadow = `0 0 0 2px ${color}`;
+                const radio = selectedLabel.querySelector('input[type="radio"]');
+                radio.style.accentColor = color;
+            }
+        }
+
+        function renderQuestion() {
+            const questions = quizData[currentState.orgType];
+            const questionData = questions[currentState.currentQuestionIndex];
+            const currentDomain = domainData[questionData.domainKey];
+            const domainColor = currentDomain.color;
+            
+            const examplesHtml = questionData.examples.map(ex => `<li>${ex}</li>`).join('');
+
+            const optionsHtml = questionData.options.map((opt, index) => {
+                const isChecked = currentState.answers[currentState.currentQuestionIndex] === opt.points;
+                const inputId = `q${currentState.currentQuestionIndex}o${index}`;
+                return `
+                    <label class="level-choice" for="${inputId}">
+                        <input type="radio" id="${inputId}" name="question${currentState.currentQuestionIndex}" value="${opt.points}" ${isChecked ? 'checked' : ''}>
+                        <div class="level-content">
+                            <span class="level-title" style="color: ${domainColor};">${opt.level}</span>
+                            <span class="level-description">${opt.text}</span>
+                        </div>
+                    </label>
+                `;
+            }).join('');
+
+            quizContent.innerHTML = `
+                <div class="flex items-center gap-3 mb-3">
+                     <svg class="w-8 h-8 flex-shrink-0" style="color: ${domainColor};" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        ${currentDomain.icon}
+                     </svg>
+                    <h2 class="text-xl font-bold uppercase tracking-wider" style="color: ${domainColor};">Domain ${currentState.currentQuestionIndex + 1}: ${currentDomain.name}</h2>
+                </div>
+
+                <div class="mt-6 p-4 rounded-lg bg-[var(--kinwise-hover-bg)] border border-gray-200">
+                    <h3 class="font-semibold text-kinwise-dark-text mb-2">Think about practices like these:</h3>
+                    <ul class="list-disc list-inside text-gray-600 space-y-1">
+                        ${examplesHtml}
+                    </ul>
+                </div>
+                
+                <div class="mt-8 mb-4">
+                    <p class="text-gray-600">Pick the stage that most accurately reflects where your organization is today.</p>
+                    <p class="text-gray-500 text-sm">Levels: Nascent, Emerging, Practicing, or Flourishing</p>
+                </div>
+                
+                <div class="space-y-3">${optionsHtml}</div>
+
+                <p id="question-error" class="text-red-500 mt-4 h-6 text-center"></p>
+            `;
+            
+            const radioButtons = quizContent.querySelectorAll(`input[name="question${currentState.currentQuestionIndex}"]`);
+            radioButtons.forEach(radio => {
+                if (radio.checked) {
+                    applyDynamicStyling(radio.id);
+                }
+                radio.addEventListener('change', (e) => {
+                    currentState.answers[currentState.currentQuestionIndex] = parseInt(e.target.value);
+                    document.getElementById('question-error').textContent = '';
+                    applyDynamicStyling(e.target.id);
+                });
+            });
+            
+            updateNavigation();
+            updateProgressBar();
+        }
+        
+        function updateNavigation() {
+            const totalQuestions = quizData[currentState.orgType].length;
+            
+            backBtn.disabled = currentState.currentQuestionIndex === 0;
+            
+            if(currentState.currentQuestionIndex === totalQuestions - 1) {
+                nextBtn.innerHTML = 'Finish & See My Score ▶';
+            } else {
+                const nextDomainName = domainData[quizData[currentState.orgType][currentState.currentQuestionIndex + 1].domainKey].name;
+                nextBtn.innerHTML = `Next: ${nextDomainName} ▶`;
+            }
+        }
+        
+        function updateProgressBar() {
+            const totalQuestions = quizData[currentState.orgType].length;
+            const progress = ((currentState.currentQuestionIndex) / totalQuestions) * 100;
+            const percentComplete = Math.round(progress);
+            
+            progressBar.style.width = `${percentComplete}%`;
+            progressText.textContent = `Domain ${currentState.currentQuestionIndex + 1} of ${totalQuestions} – ${percentComplete}% Complete`;
+        }
+
+        function calculateAndShowResults() {
+            const totalPoints = Object.values(currentState.answers).reduce((sum, points) => sum + points, 0);
+            const maxPoints = quizData[currentState.orgType].length * 4;
+            const score = Math.round((totalPoints / maxPoints) * 100);
+
+            const tier = scoreTiers.find(t => score <= t.limit);
+            
+            document.getElementById('score-value').textContent = score;
+            document.getElementById('feedback-title').textContent = tier.title;
+            document.getElementById('feedback-text').textContent = tier.text;
+            
+            showScreen('results');
+        }
+
+        function resetApp() {
+            currentState = { currentQuestionIndex: 0, orgType: null, answers: {} };
+            document.querySelectorAll('input[name="orgType"]').forEach(r => {
+                r.checked = false;
+                const label = r.parentElement;
+                label.style.borderColor = '#e5e7eb';
+                label.style.boxShadow = '';
+            });
+
+            document.getElementById('contact-no').checked = true;
+            contactForm.reset();
+            showScreen('start');
+        }
+        
+        function buildDomainBar() {
+            Object.values(domainData).forEach(domain => {
+                const barSegment = document.createElement('div');
+                barSegment.classList.add('w-1/6', 'h-full');
+                barSegment.style.backgroundColor = domain.color;
+                domainBar.appendChild(barSegment);
+            });
+        }
+        
+        function submitData(isFollowUp) {
+            const submitButton = isFollowUp ? contactForm.querySelector('button[type="submit"]') : resultsActionBtn;
+            submitButton.disabled = true;
+            submitButton.textContent = 'Submitting...';
+            
+            const formData = {
+                orgType: currentState.orgType,
+                score: document.getElementById('score-value').textContent,
+                answers: Object.values(currentState.answers),
+                optIn: document.querySelector('input[name="contact-opt-in"]:checked').value,
+            };
+
+            if (isFollowUp) {
+                formData.name = document.getElementById('contact-name').value;
+                formData.contactMethod = document.querySelector('input[name="contact-method"]:checked').value;
+                formData.phone = document.getElementById('contact-phone').value;
+                formData.email = document.getElementById('contact-email').value;
+                formData.times = Array.from(document.querySelectorAll('input[name="time"]:checked')).map(cb => cb.value);
+                formData.notes = document.getElementById('contact-notes').value;
+            }
+
+            const appsScriptUrl = 'https://script.google.com/macros/s/AKfycbw_ft3Bkt-BALDAZ-wsAl6P0ZDxcl3m9fAk3cPQdAy_lLAeUEQgS5GOOEM98-CNzkU/exec';
+            
+            fetch(appsScriptUrl, {
+                method: 'POST',
+                mode: 'no-cors', // Essential for handling Google Script redirects without error
+                body: JSON.stringify(formData),
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8', 
+                },
+            })
+            .then(() => {
+                 showScreen('final');
+            })
+            .catch(err => {
+                console.error("Fetch Error:", err);
+                const errorEl = isFollowUp ? document.getElementById('contact-error') : document.getElementById('results-helper-text');
+                errorEl.textContent = 'Could not submit form. Please check network and try again.';
+            })
+            .finally(() => {
+                submitButton.disabled = false;
+                if(isFollowUp) {
+                    submitButton.textContent = 'Submit Request';
+                } else {
+                    // This button will be hidden when the screen changes, so no need to reset text
+                }
+            });
+        }
+
+        // --- EVENT LISTENERS ---
+
+        startBtn.addEventListener('click', () => {
+            const orgTypeInput = document.querySelector('input[name="orgType"]:checked');
+            const errorEl = document.getElementById('start-error');
+            
+            if (!orgTypeInput) {
+                errorEl.textContent = 'Please select your organization type.';
+                return;
+            }
+            
+            errorEl.textContent = '';
+            currentState.orgType = orgTypeInput.value;
+            
+            renderQuestion();
+            showScreen('quiz');
+        });
+
+        nextBtn.addEventListener('click', () => {
+            const totalQuestions = quizData[currentState.orgType].length;
+            
+            if(currentState.answers[currentState.currentQuestionIndex] === undefined) {
+                document.getElementById('question-error').textContent = 'Please select an option to continue.';
+                return;
+            }
+
+            if (currentState.currentQuestionIndex < totalQuestions - 1) {
+                currentState.currentQuestionIndex++;
+                renderQuestion();
+            } else {
+                 updateProgressBar();
+                 progressText.textContent = `Pulse Complete!`;
+                 progressBar.style.width = `100%`;
+                setTimeout(calculateAndShowResults, 300);
+            }
+        });
+        
+        backBtn.addEventListener('click', () => {
+            if (currentState.currentQuestionIndex > 0) {
+                currentState.currentQuestionIndex--;
+                renderQuestion();
+            }
+        });
+
+        contactBackBtn.addEventListener('click', () => {
+             showScreen('results');
+        });
+        
+        restartBtn.addEventListener('click', resetApp);
+        finalRestartBtn.addEventListener('click', resetApp);
+
+        resultsActionBtn.addEventListener('click', () => {
+            const selectedOption = document.querySelector('input[name="contact-opt-in"]:checked').value;
+            if (selectedOption === 'yes') {
+                showScreen('contact');
+            } else {
+                submitData(false); // Submit data without follow-up details
+            }
+        });
+
+        // Delegated event listener for radio buttons inside labels
+        document.body.addEventListener('change', e => {
+            if (e.target.matches('input[name="orgType"], input[name="contact-method"]')) {
+                const name = e.target.name;
+                document.querySelectorAll(`label:has(input[name="${name}"])`).forEach(label => {
+                     const radio = label.querySelector('input');
+                    if(radio.checked) {
+                        label.style.borderColor = 'var(--kinwise-primary)';
+                        label.style.boxShadow = '0 0 0 2px var(--kinwise-primary)';
+                    } else {
+                         label.style.borderColor = '#e5e7eb';
+                         label.style.boxShadow = '';
+                    }
+                });
+            }
+            
+            if(e.target.matches('input[name="contact-opt-in"]')) {
+                resultsActionBtn.disabled = false;
+                const selectedValue = e.target.value;
+                
+                if(selectedValue === 'yes') {
+                    resultsActionBtn.textContent = 'Continue to Follow-Up Form';
+                    resultsHelperText.textContent = 'Great—just one more step to connect.';
+                } else {
+                    resultsActionBtn.textContent = 'Finish and Close';
+                    resultsHelperText.textContent = '';
+                }
+            }
+        });
+        
+        contactForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const nameInput = document.getElementById('contact-name');
+            const emailInput = document.getElementById('contact-email');
+
+            if (!nameInput.value || !emailInput.value) {
+                document.getElementById('contact-error').textContent = 'Please fill out all required fields.';
+                return;
+            }
+            document.getElementById('contact-error').textContent = '';
+            submitData(true);
+        });
+
+        // --- INITIALIZATION ---
+        buildDomainBar();
+        showScreen('start');
+        // Initial state for the results action button
+        document.querySelector('input[name="contact-opt-in"]:checked').dispatchEvent(new Event('change'));
+
+    </script>
+
+</body>
+</html>
